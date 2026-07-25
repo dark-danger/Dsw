@@ -23,11 +23,7 @@ if db_url.startswith("postgresql+asyncpg"):
     db_url = re.sub(r'\?$', '', db_url)
     db_url = re.sub(r'&$', '', db_url)
     if has_ssl:
-        import ssl
-        ssl_ctx = ssl.create_default_context()
-        ssl_ctx.check_hostname = False
-        ssl_ctx.verify_mode = ssl.CERT_NONE
-        connect_args["ssl"] = ssl_ctx
+        connect_args["ssl"] = True
 
 elif db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
