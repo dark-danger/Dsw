@@ -1,3 +1,4 @@
+import re
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
@@ -10,16 +11,17 @@ elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+")
 
 # Remove channel_binding query param if present for asyncpg compatibility
 if "channel_binding=" in db_url:
-    import re
     db_url = re.sub(r'[&?]channel_binding=[^&]*', '', db_url)
 
-# For SQLite, ensure check_same_thread=False
-connect_args = {"check_same_thread": False} if db_url.startswith("sqlite") else {}
+connect_args = {}
+if db_url.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
     db_url,
     echo=False,
-    connect_args=connect_args
+    connect_args=connect_args,
+    pool_pre_ping=True
 )
 
 AsyncSessionLocal = async_sessionmaker(
