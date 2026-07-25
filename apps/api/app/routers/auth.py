@@ -12,10 +12,13 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 @router.post("/login", response_model=TokenResponse)
 async def login(payload: LoginRequest, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.email == payload.email))
+    clean_email = payload.email.strip().lower()
+    clean_pass = payload.password.strip()
+    
+    result = await db.execute(select(User).where(func.lower(User.email) == clean_email))
     user = result.scalar_one_or_none()
     
-    if not user or not verify_password(payload.password, user.password_hash):
+    if not user or not verify_password(clean_pass, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password"
@@ -72,3 +75,33 @@ async def change_password(
 @router.post("/logout")
 async def logout():
     return {"message": "Logged out successfully"}
+
+@router.get("/seed-demo")
+async def seed_demo_accounts(db: AsyncSession = Depends(get_db)):
+    accounts = [
+        ("admin@geeta.edu.in", "Dr. Rajesh Sharma (Dean)", UserRole.super_admin, "admin123"),
+        ("faculty@geeta.edu.in", "Prof. Amit Kumar", UserRole.faculty, "faculty123"),
+        ("student@geeta.edu.in", "Riya Sharma", UserRole.student, "student123")
+    ]
+    created_or_updated = []
+    for email, name, role, plain_pass in accounts:
+        res = await db.execute(select(User).where(User.email == email))
+        user = res.scalar_one_or_none()
+        if not user:
+            user = User(
+                name=name,
+                email=email,
+                role=role,
+                password_hash=get_password_hash(plain_pass),
+                must_change_password=False,
+                is_active=True
+            )
+            db.add(user)
+            created_or_updated.append(f"Created {email}")
+        else:
+            user.password_hash = get_password_hash(plain_pass)
+            user.is_active = True
+            created_or_updated.append(f"Reset {email}")
+    await db.commit()
+    return {"status": "ok", "summary": created_or_updated}
+
