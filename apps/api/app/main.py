@@ -99,12 +99,11 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# Enable CORS for local dev and cloud deployments
+# Enable universal CORS for Bearer token API authentication
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
-    allow_origin_regex="https://.*",
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
