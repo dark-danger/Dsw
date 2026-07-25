@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.*
+.yarn/*
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# testing & logs
+coverage/
+*.log
+
+# build outputs
+build/
+dist/
+.next/
+out/
+
+# databases & uploads
+*.db
+*.sqlite
+*.sqlite3
+apps/api/uploads/*
+!apps/api/uploads/.gitkeep
+
+# misc
+.DS_Store
+*.pem
+.env*
+.vercel
+*.tsbuildinfo

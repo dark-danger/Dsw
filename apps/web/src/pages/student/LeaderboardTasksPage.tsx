@@ -1,0 +1,177 @@
+import React, { useEffect, useState } from 'react';
+import { apiRequest } from '../../lib/api';
+import { Trophy, Sparkles, Send, CheckCircle2, FileText, X } from 'lucide-react';
+
+interface LeaderboardTask {
+  id: number;
+  title: string;
+  description: string;
+  points_value: number;
+  submission_mode: 'single' | 'multiple';
+  my_submission_count: number;
+  my_has_submitted: boolean;
+}
+
+export const LeaderboardTasksPage: React.FC = () => {
+  const [tasks, setTasks] = useState<LeaderboardTask[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Submit Modal
+  const [selectedTask, setSelectedTask] = useState<LeaderboardTask | null>(null);
+  const [submissionText, setSubmissionText] = useState('');
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const fetchTasks = async () => {
+    setLoading(true);
+    try {
+      const data = await apiRequest<LeaderboardTask[]>('/leaderboard/students/tasks');
+      setTasks(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  const handleSubmitProof = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedTask) return;
+    setSubmitting(true);
+
+    try {
+      let fileUrl = '';
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const uploadRes = await apiRequest('/uploads', 'POST', formData, true);
+        fileUrl = uploadRes.file_url;
+      }
+
+      await apiRequest(`/leaderboard/students/tasks/${selectedTask.id}/submit`, 'POST', {
+        submission_text: submissionText,
+        file_url: fileUrl || undefined
+      });
+
+      alert('Proof submitted successfully! Sent to DSW Admin for point verification.');
+      setSelectedTask(null);
+      setSubmissionText('');
+      setFile(null);
+      fetchTasks();
+    } catch (err: any) {
+      alert(err.message || 'Proof submission failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-panel p-6 border-l-4 border-l-amber-400">
+        <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-amber-400" /> Student Points Challenges
+        </h2>
+        <p className="text-xs text-slate-400 mt-1">Complete volunteer duties and student competitions to earn leaderboard points.</p>
+      </div>
+
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {loading ? (
+          <div className="col-span-2 p-8 text-center text-slate-500 glass-panel">Loading leaderboard challenges...</div>
+        ) : tasks.length === 0 ? (
+          <div className="col-span-2 p-8 text-center text-slate-500 glass-panel">No active challenges available right now.</div>
+        ) : (
+          tasks.map(t => {
+            const isDisabled = t.submission_mode === 'single' && t.my_has_submitted;
+
+            return (
+              <div key={t.id} className="glass-panel p-6 space-y-4 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      +{t.points_value} Points
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400">
+                      Mode: {t.submission_mode === 'single' ? 'Single Submission' : 'Multiple Allowed'}
+                    </span>
+                  </div>
+
+                  <h3 className="text-lg font-bold text-slate-100 mt-3">{t.title}</h3>
+                  <p className="text-xs text-slate-300 leading-relaxed mt-1">{t.description}</p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-800 flex items-center justify-between">
+                  <span className="text-xs text-slate-500">
+                    Your Submissions: {t.my_submission_count}
+                  </span>
+
+                  <button
+                    disabled={isDisabled}
+                    onClick={() => setSelectedTask(t)}
+                    className={`btn-primary text-xs py-1.5 px-3 ${
+                      isDisabled ? 'opacity-50 cursor-not-allowed bg-slate-800 text-slate-500 border-none' : ''
+                    }`}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {isDisabled ? 'Already Submitted' : 'Submit Challenge Proof'}
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Submission Modal */}
+      {selectedTask && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+          <div className="w-full max-w-lg glass-panel p-6 shadow-2xl relative">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+              <h3 className="text-lg font-bold text-slate-100 flex items-center gap-2">
+                <Send className="w-5 h-5 text-amber-400" /> Submit Proof: {selectedTask.title}
+              </h3>
+              <button onClick={() => setSelectedTask(null)} className="text-slate-400 hover:text-slate-200">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitProof} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Proof Details / Contribution Note</label>
+                <textarea
+                  required
+                  rows={4}
+                  value={submissionText}
+                  onChange={e => setSubmissionText(e.target.value)}
+                  placeholder="Explain how you completed this challenge..."
+                  className="glass-input"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-300 mb-1">Upload Certificate / Image Proof</label>
+                <input
+                  type="file"
+                  onChange={e => setFile(e.target.files ? e.target.files[0] : null)}
+                  className="glass-input text-xs"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
+                <button type="button" onClick={() => setSelectedTask(null)} className="btn-secondary">Cancel</button>
+                <button type="submit" disabled={submitting} className="btn-primary">
+                  {submitting ? 'Submitting Proof...' : 'Submit to DSW for Review'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
