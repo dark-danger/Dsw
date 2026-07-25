@@ -25,10 +25,10 @@ from app.database import engine, Base, AsyncSessionLocal
 async def auto_seed_if_empty():
     try:
         async with AsyncSessionLocal() as session:
-            result = await session.execute(select(User).limit(1))
-            existing_user = result.scalar_one_or_none()
-            if not existing_user:
-                # 1. Super Admin
+            # 1. Ensure Super Admin
+            res_admin = await session.execute(select(User).where(User.email == "admin@geeta.edu.in"))
+            admin = res_admin.scalar_one_or_none()
+            if not admin:
                 admin = User(
                     name="Dr. Rajesh Sharma (Dean)",
                     email="admin@geeta.edu.in",
@@ -38,9 +38,14 @@ async def auto_seed_if_empty():
                     must_change_password=False
                 )
                 session.add(admin)
+            else:
+                admin.password_hash = get_password_hash("admin123")
 
-                # 2. Faculty Members
-                fac1 = User(
+            # 2. Ensure Faculty
+            res_fac = await session.execute(select(User).where(User.email == "faculty@geeta.edu.in"))
+            fac = res_fac.scalar_one_or_none()
+            if not fac:
+                fac = User(
                     name="Prof. Amit Kumar",
                     email="faculty@geeta.edu.in",
                     phone="+91 98123 45678",
@@ -51,21 +56,15 @@ async def auto_seed_if_empty():
                     password_hash=get_password_hash("faculty123"),
                     must_change_password=False
                 )
-                fac2 = User(
-                    name="Dr. Sneha Verma",
-                    email="sneha.verma@geeta.edu.in",
-                    phone="+91 97123 88990",
-                    department="Management & Commerce",
-                    designation="Assistant Professor",
-                    employee_id="GU-MGT-019",
-                    role=UserRole.faculty,
-                    password_hash=get_password_hash("faculty123"),
-                    must_change_password=False
-                )
-                session.add_all([fac1, fac2])
+                session.add(fac)
+            else:
+                fac.password_hash = get_password_hash("faculty123")
 
-                # 3. Student Members
-                stu1 = User(
+            # 3. Ensure Student
+            res_stu = await session.execute(select(User).where(User.email == "student@geeta.edu.in"))
+            stu = res_stu.scalar_one_or_none()
+            if not stu:
+                stu = User(
                     name="Riya Sharma",
                     email="student@geeta.edu.in",
                     phone="+91 99887 76655",
@@ -76,9 +75,12 @@ async def auto_seed_if_empty():
                     password_hash=get_password_hash("student123"),
                     must_change_password=False
                 )
-                session.add(stu1)
-                await session.commit()
-                print("Auto-seeded initial database accounts successfully!")
+                session.add(stu)
+            else:
+                stu.password_hash = get_password_hash("student123")
+
+            await session.commit()
+            print("Auto-seeded & synchronized demo accounts successfully!")
     except Exception as e:
         print(f"Auto-seed warning: {e}")
 

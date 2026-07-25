@@ -68,11 +68,13 @@ async def create_event(
 
     return build_event_out(created)
 
+from app.core.deps import get_current_user, get_current_user_optional, require_role
+
 @router.get("", response_model=List[EventOut])
 async def list_events(
     status_filter: Optional[str] = None,
     search: Optional[str] = None,
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     query = select(Event).options(selectinload(Event.coordinator), selectinload(Event.tasks))

@@ -287,9 +287,11 @@ async def manual_award_points(
 
     return {"message": f"Successfully updated student points by {payload.points}"}
 
+from app.core.deps import get_current_user, get_current_user_optional, require_role
+
 @router.get("/rankings", response_model=List[StudentRankingOut])
 async def get_student_rankings(
-    current_user: User = Depends(get_current_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     # Fetch all active students
