@@ -4,17 +4,32 @@ from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
 db_url = settings.DATABASE_URL
+
+# Convert postgres:// or postgresql:// to postgresql+asyncpg://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 elif db_url.startswith("postgresql://") and not db_url.startswith("postgresql+"):
     db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-# Remove channel_binding query param if present for asyncpg compatibility
-if "channel_binding=" in db_url:
-    db_url = re.sub(r'[&?]channel_binding=[^&]*', '', db_url)
-
 connect_args = {}
-if db_url.startswith("sqlite"):
+
+if db_url.startswith("postgresql+asyncpg"):
+    # asyncpg does NOT accept sslmode/channel_binding as query params
+    # Strip them out and pass ssl=True via connect_args instead
+    has_ssl = "sslmode=require" in db_url or "sslmode=prefer" in db_url
+    db_url = re.sub(r'[&?]sslmode=[^&]*', '', db_url)
+    db_url = re.sub(r'[&?]channel_binding=[^&]*', '', db_url)
+    # Clean any trailing ? or & left over
+    db_url = re.sub(r'\?$', '', db_url)
+    db_url = re.sub(r'&$', '', db_url)
+    if has_ssl:
+        import ssl
+        ssl_ctx = ssl.create_default_context()
+        ssl_ctx.check_hostname = False
+        ssl_ctx.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ssl_ctx
+
+elif db_url.startswith("sqlite"):
     connect_args["check_same_thread"] = False
 
 engine = create_async_engine(
