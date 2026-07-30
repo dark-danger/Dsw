@@ -1,14 +1,4 @@
-/**
- * API base URL resolution:
- *  - Production (Vercel):   VITE_API_BASE_URL is NOT set → defaults to '/api'
- *                           All requests go to the same origin, routed by vercel.json
- *  - Local development:     VITE_API_BASE_URL is NOT set → proxy in vite.config.ts
- *                           forwards /api/* to http://localhost:8000
- *
- * If you need to point at a remote backend (e.g. Render), set VITE_API_BASE_URL
- * in Vercel's Environment Variables dashboard.
- */
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? '/api';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://dsw-07gj.onrender.com/api';
 
 export async function apiRequest<T = any>(
   endpoint: string,
