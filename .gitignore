@@ -1,33 +1,44 @@
-# dependencies
+# ── Node ────────────────────────────────────────────────────────────────────────
 node_modules/
 .pnp
 .pnp.*
 .yarn/*
+
+# ── Python ──────────────────────────────────────────────────────────────────────
 venv/
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
 
-# testing & logs
-coverage/
-*.log
-
-# build outputs
-build/
+# ── Build outputs ───────────────────────────────────────────────────────────────
 dist/
+build/
 .next/
 out/
 
-# databases & uploads
+# ── Databases & local storage ────────────────────────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
-apps/api/uploads/*
-!apps/api/uploads/.gitkeep
 
-# misc
+# ── Uploads (serverless writes to /tmp; keep the gitkeep marker only) ──────────
+uploads/*
+!uploads/.gitkeep
+
+# ── Environment & secrets ────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+
+# ── Vercel ──────────────────────────────────────────────────────────────────────
+.vercel
+
+# ── Misc ────────────────────────────────────────────────────────────────────────
 .DS_Store
 *.pem
-.env*
-.vercel
 *.tsbuildinfo
+*.log
+coverage/
