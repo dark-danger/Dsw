@@ -29,7 +29,7 @@ interface TaskItem {
   assigned_to: number;
   assignee?: User;
   due_date?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'declined';
   created_at: string;
   submissions: Submission[];
@@ -59,14 +59,14 @@ export const TasksPage: React.FC = () => {
   const [editDescription, setEditDescription] = useState('');
   const [editAssignedTo, setEditAssignedTo] = useState<number | ''>('');
   const [editEventId, setEditEventId] = useState<number | ''>('');
-  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   // Form State
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [assignedTo, setAssignedTo] = useState<number | ''>('');
   const [eventId, setEventId] = useState<number | ''>('');
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [priority, setPriority] = useState<'low' | 'medium' | 'high'>('medium');
 
   const fetchTasksData = async () => {
     setLoading(true);
@@ -199,8 +199,8 @@ export const TasksPage: React.FC = () => {
 
           <div className="flex items-center gap-2">
             <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
-              t.priority === 'urgent' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
-              t.priority === 'high' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+              t.priority === 'high' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+              t.priority === 'medium' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
             }`}>
               {t.priority}
             </span>
@@ -357,7 +357,6 @@ export const TasksPage: React.FC = () => {
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
                   </select>
                 </div>
               </div>
@@ -422,7 +421,6 @@ export const TasksPage: React.FC = () => {
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
-                    <option value="urgent">Urgent</option>
                   </select>
                 </div>
               </div>

@@ -29,7 +29,17 @@ export async function apiRequest<T = any>(
       const text = await response.text();
       try {
         const errJson = JSON.parse(text);
-        errorDetail = errJson.detail || JSON.stringify(errJson);
+        if (errJson.detail) {
+          if (Array.isArray(errJson.detail)) {
+            errorDetail = errJson.detail.map((e: any) => e.msg || JSON.stringify(e)).join(', ');
+          } else if (typeof errJson.detail === 'string') {
+            errorDetail = errJson.detail;
+          } else {
+            errorDetail = JSON.stringify(errJson.detail);
+          }
+        } else {
+          errorDetail = JSON.stringify(errJson);
+        }
       } catch {
         errorDetail = text;
       }

@@ -19,7 +19,7 @@ interface TaskItem {
   task_type: string;
   event_title?: string;
   due_date?: string;
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  priority: 'low' | 'medium' | 'high';
   status: 'pending' | 'in_progress' | 'submitted' | 'approved' | 'declined';
   submissions: TaskSubmission[];
 }
@@ -119,7 +119,8 @@ export const MyTasksPage: React.FC = () => {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase ${
-                    t.priority === 'urgent' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                    t.priority === 'high' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' :
+                    t.priority === 'medium' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                   }`}>
                     Priority: {t.priority}
                   </span>
